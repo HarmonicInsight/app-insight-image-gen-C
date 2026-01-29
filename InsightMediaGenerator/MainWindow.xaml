@@ -5,45 +5,193 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:InsightMediaGenerator.Views"
         mc:Ignorable="d"
-        Title="Insight Media Generator" Height="800" Width="1100"
+        Title="InsightImageGen" Height="850" Width="1200"
         WindowStartupLocation="CenterScreen"
-        Background="#f5f5f5">
+        Background="{StaticResource BgPrimaryBrush}">
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="36"/>
+            <RowDefinition Height="52"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="46"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Border Grid.Row="0" Background="White" BorderBrush="#ddd" BorderThickness="0,0,0,1">
-            <TextBlock Text="Insight Media Generator"
-                       FontSize="24" FontWeight="Bold"
-                       Foreground="#0056b3"
-                       Margin="20,15"/>
+        <!-- ============================================================ -->
+        <!-- Title Bar                                                    -->
+        <!-- ============================================================ -->
+        <Border Grid.Row="0" Background="{StaticResource BgTitlebarBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Logo and Title -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
+                    <!-- Logo Mark -->
+                    <Border Width="18" Height="18" CornerRadius="4" Background="{StaticResource AccentGradientBrush}"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="Hi" FontSize="8" FontWeight="ExtraBold"
+                                   Foreground="{StaticResource BgTitlebarBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="InsightImageGen v1.0.0"
+                               Foreground="{StaticResource TextOnDarkTertiaryBrush}"
+                               FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                </StackPanel>
+
+                <!-- Menu -->
+                <Menu Grid.Column="1" VerticalAlignment="Center" Margin="20,0,0,0">
+                    <MenuItem Header="ファイル">
+                        <MenuItem Header="設定フォルダを開く" Click="OpenSettingsFolder_Click"/>
+                        <Separator/>
+                        <MenuItem Header="終了" Click="Exit_Click"/>
+                    </MenuItem>
+                    <MenuItem Header="編集">
+                        <MenuItem Header="設定"/>
+                    </MenuItem>
+                    <MenuItem Header="表示">
+                        <MenuItem Header="Simple Image" Click="ViewSimpleImage_Click"/>
+                        <MenuItem Header="Batch Image" Click="ViewBatchImage_Click"/>
+                        <MenuItem Header="Audio" Click="ViewAudio_Click"/>
+                    </MenuItem>
+                    <MenuItem Header="ヘルプ">
+                        <MenuItem Header="ドキュメント" Click="OpenDocs_Click"/>
+                        <Separator/>
+                        <MenuItem Header="バージョン情報" Click="About_Click"/>
+                    </MenuItem>
+                </Menu>
+
+                <!-- Window Controls (placeholder) -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Window controls handled by OS -->
+                </StackPanel>
+            </Grid>
         </Border>
 
-        <!-- Tab Control -->
-        <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex}"
-                    Margin="20" Background="White">
-            <TabItem Header="Simple Image">
-                <views:SimpleImageView DataContext="{Binding SimpleImage}"/>
-            </TabItem>
-            <TabItem Header="Batch Image">
-                <views:BatchImageView DataContext="{Binding BatchImage}"/>
-            </TabItem>
-            <TabItem Header="Audio">
-                <views:AudioView DataContext="{Binding Audio}"/>
-            </TabItem>
-        </TabControl>
+        <!-- ============================================================ -->
+        <!-- App Header                                                   -->
+        <!-- ============================================================ -->
+        <Border Grid.Row="1" Background="{StaticResource BgPrimaryBrush}"
+                BorderBrush="{StaticResource BorderDefaultBrush}" BorderThickness="0,0,0,1">
+            <Grid Margin="24,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-        <!-- Status Bar -->
-        <Border Grid.Row="2" Background="#f8f9fa" BorderBrush="#ddd" BorderThickness="0,1,0,0">
-            <TextBlock Text="{Binding StatusMessage}"
-                       Margin="20,10"
-                       FontSize="12"
-                       Foreground="#666"/>
+                <!-- App Brand -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- App Logo -->
+                    <Border Width="28" Height="28" CornerRadius="7" Background="{StaticResource AccentGradientBrush}">
+                        <Border.Effect>
+                            <DropShadowEffect ShadowDepth="1" BlurRadius="3" Opacity="0.2" Color="#B8942F"/>
+                        </Border.Effect>
+                        <TextBlock Text="Hi" FontSize="11" FontWeight="Bold" Foreground="White"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- App Name & Version -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                        <TextBlock Text="InsightImageGen" FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                        <TextBlock Text="v1.0.0" FontSize="11"
+                                   Foreground="{StaticResource TextTertiaryBrush}"
+                                   VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    </StackPanel>
+
+                    <!-- Plan Badge -->
+                    <Border Style="{StaticResource PlanBadgeStyle}" Margin="12,0,0,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="5" Height="5" Fill="{StaticResource Accent500Brush}"
+                                     VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="{Binding CurrentPlan, FallbackValue=FREE}"
+                                       Style="{StaticResource PlanBadgeTextStyle}"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Header Actions -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource HeaderButtonStyle}" Click="Settings_Click" Margin="0,0,6,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"
+                                  Stroke="{StaticResource TextSecondaryBrush}" StrokeThickness="1.8"
+                                  Fill="Transparent" Width="14" Height="14" Stretch="Uniform"/>
+                            <TextBlock Text="設定" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource HeaderButtonStyle}" Click="License_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"
+                                  Stroke="{StaticResource TextSecondaryBrush}" StrokeThickness="1.8"
+                                  Fill="Transparent" Width="14" Height="14" Stretch="Uniform"/>
+                            <TextBlock Text="ライセンス" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ============================================================ -->
+        <!-- Main Content                                                 -->
+        <!-- ============================================================ -->
+        <Border Grid.Row="2" Background="{StaticResource BgCardBrush}" Margin="20"
+                BorderBrush="{StaticResource BorderDefaultBrush}" BorderThickness="1" CornerRadius="12">
+            <Border.Effect>
+                <DropShadowEffect ShadowDepth="2" BlurRadius="8" Opacity="0.06" Color="Black"/>
+            </Border.Effect>
+
+            <TabControl SelectedIndex="{Binding SelectedTabIndex}" Background="Transparent"
+                        BorderThickness="0" Padding="0">
+                <TabItem Header="Simple Image">
+                    <views:SimpleImageView DataContext="{Binding SimpleImage}"/>
+                </TabItem>
+                <TabItem Header="Batch Image">
+                    <views:BatchImageView DataContext="{Binding BatchImage}"/>
+                </TabItem>
+                <TabItem Header="Audio">
+                    <views:AudioView DataContext="{Binding Audio}"/>
+                </TabItem>
+            </TabControl>
+        </Border>
+
+        <!-- ============================================================ -->
+        <!-- Status Bar                                                   -->
+        <!-- ============================================================ -->
+        <Border Grid.Row="3" Background="{StaticResource BgPrimaryBrush}"
+                BorderBrush="{StaticResource BorderDefaultBrush}" BorderThickness="0,1,0,0">
+            <Grid Margin="24,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left: Status -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse Style="{StaticResource StatusDotOnlineStyle}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding StatusMessage, FallbackValue=待機中}"
+                               Foreground="{StaticResource TextTertiaryBrush}"
+                               FontSize="11" VerticalAlignment="Center" Margin="7,0,0,0"/>
+                    <Button Style="{StaticResource GhostButtonStyle}" Content="詳細を表示"
+                            FontSize="11" Padding="8,4" Margin="14,0,0,0"
+                            Foreground="{StaticResource TextTertiaryBrush}"/>
+                </StackPanel>
+
+                <!-- Right: Version Info -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Stable Diffusion: " Foreground="{StaticResource TextTertiaryBrush}" FontSize="11"/>
+                    <TextBlock Text="{Binding StableDiffusionStatus, FallbackValue=未接続}"
+                               Foreground="{StaticResource TextTertiaryBrush}" FontSize="11"/>
+                    <TextBlock Text="  |  " Foreground="{StaticResource BorderDefaultBrush}" FontSize="11"/>
+                    <TextBlock Text="VOICEVOX: " Foreground="{StaticResource TextTertiaryBrush}" FontSize="11"/>
+                    <TextBlock Text="{Binding VoicevoxStatus, FallbackValue=未接続}"
+                               Foreground="{StaticResource TextTertiaryBrush}" FontSize="11"/>
+                </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </Window>
