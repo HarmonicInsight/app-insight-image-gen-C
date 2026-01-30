@@ -15,10 +15,12 @@ public static class ImageEndpoints
             ImageGenerateApiRequest request,
             IStableDiffusionService sdService,
             IDatabaseService dbService,
-            AppConfig config) =>
+            AppConfig config,
+            CancellationToken ct) =>
         {
-            if (string.IsNullOrWhiteSpace(request.Prompt))
-                return Results.BadRequest(ApiResponse.Fail("prompt is required"));
+            var error = Validation.ValidateImageRequest(request);
+            if (error != null)
+                return Results.BadRequest(ApiResponse.Fail(error));
 
             var genRequest = new ImageGenerationRequest
             {
@@ -36,10 +38,12 @@ public static class ImageEndpoints
                 BatchCount = request.BatchCount
             };
 
-            var result = await sdService.GenerateAsync(genRequest);
+            var result = await sdService.GenerateAsync(genRequest, ct);
 
             if (!result.Success)
-                return Results.Json(ApiResponse<List<ImageInfoResponse>>.Fail(result.ErrorMessage ?? "Generation failed"), statusCode: 500);
+                return Results.Json(
+                    ApiResponse<List<ImageInfoResponse>>.Fail(result.ErrorMessage ?? "Generation failed"),
+                    statusCode: StatusCodes.Status502BadGateway);
 
             foreach (var img in result.GeneratedImages)
                 await dbService.SaveImageMetadataAsync(img);
@@ -48,22 +52,23 @@ public static class ImageEndpoints
             return Results.Json(ApiResponse<List<ImageInfoResponse>>.Ok(response));
         })
         .WithName("GenerateImage")
-        .WithDescription("Generate image(s) synchronously. Blocks until complete.");
+        .WithDescription("Generate image(s) synchronously. Blocks until complete. Use /generate/async for long operations.");
 
         // ── Async single image generation (returns job ID) ──
         group.MapPost("/generate/async", (
             ImageGenerateApiRequest request,
             JobService jobService) =>
         {
-            if (string.IsNullOrWhiteSpace(request.Prompt))
-                return Results.BadRequest(ApiResponse.Fail("prompt is required"));
+            var error = Validation.ValidateImageRequest(request);
+            if (error != null)
+                return Results.BadRequest(ApiResponse.Fail(error));
 
             var jobId = jobService.EnqueueImageGeneration(request);
             return Results.Accepted($"/api/jobs/{jobId}",
                 ApiResponse<JobResponse>.Ok(jobService.MapJobToResponse(jobService.GetJob(jobId)!)));
         })
         .WithName("GenerateImageAsync")
-        .WithDescription("Start async image generation. Poll /api/jobs/{job_id} for status.");
+        .WithDescription("Start async image generation. Poll GET /api/jobs/{job_id} for status and result.");
 
         // ── Batch image generation (always async) ──
         group.MapPost("/batch", async (
@@ -72,6 +77,10 @@ public static class ImageEndpoints
             IFileService fileService,
             IDatabaseService dbService) =>
         {
+            var error = Validation.ValidateBatchRequest(request);
+            if (error != null)
+                return Results.BadRequest(ApiResponse.Fail(error));
+
             var characters = new List<CharacterPromptDto>();
 
             if (request.Characters != null && request.Characters.Count > 0)
@@ -113,7 +122,7 @@ public static class ImageEndpoints
                 ApiResponse<JobResponse>.Ok(jobService.MapJobToResponse(jobService.GetJob(jobId)!)));
         })
         .WithName("BatchGenerateImages")
-        .WithDescription("Start batch image generation for multiple characters. Always async.");
+        .WithDescription("Start batch image generation for multiple characters. Always async. Poll GET /api/jobs/{job_id}.");
 
         // ── List generated images ──
         group.MapGet("/", async (IDatabaseService dbService) =>

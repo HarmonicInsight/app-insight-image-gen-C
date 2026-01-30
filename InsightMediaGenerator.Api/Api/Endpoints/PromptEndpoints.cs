@@ -36,10 +36,9 @@ public static class PromptEndpoints
             IFileService fileService,
             IDatabaseService dbService) =>
         {
-            if (string.IsNullOrWhiteSpace(request.FileName))
-                return Results.BadRequest(ApiResponse.Fail("file_name is required"));
-            if (request.Characters.Count == 0)
-                return Results.BadRequest(ApiResponse.Fail("characters array must not be empty"));
+            var error = Validation.ValidateUploadPrompt(request);
+            if (error != null)
+                return Results.BadRequest(ApiResponse.Fail(error));
 
             var fileName = request.FileName.EndsWith(".json")
                 ? request.FileName
@@ -60,7 +59,7 @@ public static class PromptEndpoints
             {
                 FileName = fileName,
                 FilePath = filePath,
-                UploadedAt = DateTime.Now,
+                UploadedAt = DateTime.UtcNow,
                 Comment = request.Comment
             };
             var id = await dbService.SaveJsonFileAsync(record);

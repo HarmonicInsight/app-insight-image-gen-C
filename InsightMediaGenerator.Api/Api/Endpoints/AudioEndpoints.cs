@@ -14,10 +14,12 @@ public static class AudioEndpoints
         group.MapPost("/generate", async (
             AudioGenerateApiRequest request,
             IVoicevoxService vvService,
-            AppConfig config) =>
+            AppConfig config,
+            CancellationToken ct) =>
         {
-            if (string.IsNullOrWhiteSpace(request.Text))
-                return Results.BadRequest(ApiResponse.Fail("text is required"));
+            var error = Validation.ValidateAudioRequest(request);
+            if (error != null)
+                return Results.BadRequest(ApiResponse.Fail(error));
 
             var audioParams = new AudioGenerationParams
             {
@@ -31,10 +33,12 @@ public static class AudioEndpoints
                 FileName = request.FileName
             };
 
-            var result = await vvService.GenerateAudioAsync(audioParams);
+            var result = await vvService.GenerateAudioAsync(audioParams, ct);
 
             if (!result.Success)
-                return Results.Json(ApiResponse<AudioGenerateApiResponse>.Fail(result.ErrorMessage ?? "Audio generation failed"), statusCode: 500);
+                return Results.Json(
+                    ApiResponse<AudioGenerateApiResponse>.Fail(result.ErrorMessage ?? "Audio generation failed"),
+                    statusCode: StatusCodes.Status502BadGateway);
 
             var response = new AudioGenerateApiResponse
             {
@@ -52,8 +56,9 @@ public static class AudioEndpoints
             AudioGenerateApiRequest request,
             JobService jobService) =>
         {
-            if (string.IsNullOrWhiteSpace(request.Text))
-                return Results.BadRequest(ApiResponse.Fail("text is required"));
+            var error = Validation.ValidateAudioRequest(request);
+            if (error != null)
+                return Results.BadRequest(ApiResponse.Fail(error));
 
             var jobId = jobService.EnqueueAudioGeneration(request);
             return Results.Accepted($"/api/jobs/{jobId}",

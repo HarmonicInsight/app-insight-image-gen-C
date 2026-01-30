@@ -398,9 +398,6 @@ public class PipelineStep
 
     [JsonPropertyName("params")]
     public Dictionary<string, object>? Params { get; set; }
-
-    [JsonPropertyName("depends_on")]
-    public int? DependsOn { get; set; }
 }
 
 public class PipelineResponse

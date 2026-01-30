@@ -4,7 +4,7 @@ using InsightMediaGenerator.Services.Interfaces;
 
 namespace InsightMediaGenerator.Api;
 
-public class JobInfo
+public class JobInfo : IDisposable
 {
     public string Id { get; set; } = string.Empty;
     public JobType Type { get; set; }
@@ -15,17 +15,27 @@ public class JobInfo
     public DateTime? CompletedAt { get; set; }
     public object? Result { get; set; }
     public CancellationTokenSource Cts { get; set; } = new();
+    public int FailedCount { get; set; }
+    public int SuccessCount { get; set; }
+
+    public void Dispose()
+    {
+        Cts.Dispose();
+    }
 }
 
-public class JobService
+public class JobService : IDisposable
 {
     private readonly ConcurrentDictionary<string, JobInfo> _jobs = new();
     private readonly IStableDiffusionService _sdService;
     private readonly IVoicevoxService _voicevoxService;
     private readonly IDatabaseService _databaseService;
-    private readonly IFileService _fileService;
     private readonly AppConfig _config;
     private readonly ILogger<JobService> _logger;
+    private readonly Timer _cleanupTimer;
+
+    private const int MaxJobRetentionMinutes = 60;
+    private const int CleanupIntervalMinutes = 5;
 
     public JobService(
         IStableDiffusionService sdService,
@@ -38,9 +48,34 @@ public class JobService
         _sdService = sdService;
         _voicevoxService = voicevoxService;
         _databaseService = databaseService;
-        _fileService = fileService;
         _config = config;
         _logger = logger;
+
+        _cleanupTimer = new Timer(CleanupExpiredJobs, null,
+            TimeSpan.FromMinutes(CleanupIntervalMinutes),
+            TimeSpan.FromMinutes(CleanupIntervalMinutes));
+    }
+
+    private void CleanupExpiredJobs(object? state)
+    {
+        var cutoff = DateTime.UtcNow.AddMinutes(-MaxJobRetentionMinutes);
+        var expiredIds = _jobs
+            .Where(kv => kv.Value.CompletedAt.HasValue && kv.Value.CompletedAt.Value < cutoff)
+            .Select(kv => kv.Key)
+            .ToList();
+
+        foreach (var id in expiredIds)
+        {
+            if (_jobs.TryRemove(id, out var removed))
+            {
+                removed.Dispose();
+                _logger.LogDebug("Cleaned up expired job {JobId}", id);
+            }
+        }
+
+        if (expiredIds.Count > 0)
+            _logger.LogInformation("Job cleanup: removed {Count} expired job(s), {Remaining} remaining",
+                expiredIds.Count, _jobs.Count);
     }
 
     public JobInfo? GetJob(string jobId) => _jobs.GetValueOrDefault(jobId);
@@ -76,22 +111,7 @@ public class JobService
             job.Status = JobStatus.Running;
             job.Message = "Generating image...";
 
-            var genRequest = new ImageGenerationRequest
-            {
-                Prompt = request.Prompt,
-                NegativePrompt = request.NegativePrompt,
-                Model = request.Model ?? _config.Defaults.Model,
-                Lora = request.Lora,
-                LoraWeight = request.LoraWeight ?? _config.Defaults.LoraWeight,
-                Steps = request.Steps ?? _config.Defaults.Steps,
-                CfgScale = request.CfgScale ?? _config.Defaults.CfgScale,
-                Width = request.Width ?? _config.Defaults.Width,
-                Height = request.Height ?? _config.Defaults.Height,
-                SamplerName = request.Sampler ?? _config.Defaults.Sampler,
-                CharName = request.CharName,
-                BatchCount = request.BatchCount
-            };
-
+            var genRequest = BuildImageRequest(request);
             var totalSets = request.BatchCount;
             var allImages = new List<ImageInfoResponse>();
 
@@ -114,29 +134,21 @@ public class JobService
                     await _databaseService.SaveImageMetadataAsync(img);
                     allImages.Add(MapImageToResponse(img));
                 }
+                job.SuccessCount = allImages.Count;
 
                 if (i < totalSets - 1)
                     await Task.Delay(500, job.Cts.Token);
             }
 
-            job.Status = JobStatus.Completed;
-            job.Progress = 100;
-            job.Message = $"Generated {allImages.Count} image(s)";
-            job.Result = allImages;
-            job.CompletedAt = DateTime.UtcNow;
+            CompleteJob(job, allImages, $"Generated {allImages.Count} image(s)");
         }
         catch (OperationCanceledException)
         {
-            job.Status = JobStatus.Cancelled;
-            job.Message = "Cancelled";
-            job.CompletedAt = DateTime.UtcNow;
+            MarkCancelled(job);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Image generation job {JobId} failed", job.Id);
-            job.Status = JobStatus.Failed;
-            job.Message = ex.Message;
-            job.CompletedAt = DateTime.UtcNow;
+            MarkFailed(job, ex, "Image generation");
         }
     }
 
@@ -157,6 +169,7 @@ public class JobService
             var allImages = new List<ImageInfoResponse>();
             var totalOps = characters.Count * request.BatchCount;
             var currentOp = 0;
+            var errors = new List<string>();
 
             foreach (var character in characters)
             {
@@ -186,6 +199,8 @@ public class JobService
                     var result = await _sdService.GenerateAsync(genRequest, job.Cts.Token);
                     if (!result.Success)
                     {
+                        job.FailedCount++;
+                        errors.Add($"{character.Name}: {result.ErrorMessage}");
                         _logger.LogWarning("Batch generation failed for {CharName}: {Error}", character.Name, result.ErrorMessage);
                         continue;
                     }
@@ -195,29 +210,40 @@ public class JobService
                         await _databaseService.SaveImageMetadataAsync(img);
                         allImages.Add(MapImageToResponse(img));
                     }
+                    job.SuccessCount = allImages.Count;
 
                     await Task.Delay(500, job.Cts.Token);
                 }
             }
 
-            job.Status = JobStatus.Completed;
-            job.Progress = 100;
-            job.Message = $"Batch complete: {allImages.Count} image(s) generated";
-            job.Result = allImages;
-            job.CompletedAt = DateTime.UtcNow;
+            // Distinguish full success from partial success
+            if (errors.Count == 0)
+            {
+                CompleteJob(job, allImages, $"Batch complete: {allImages.Count} image(s) generated");
+            }
+            else if (allImages.Count > 0)
+            {
+                job.Status = JobStatus.Completed;
+                job.Progress = 100;
+                job.Message = $"Batch partial: {allImages.Count} succeeded, {job.FailedCount} failed";
+                job.Result = new { images = allImages, errors };
+                job.CompletedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                job.Status = JobStatus.Failed;
+                job.Message = $"Batch failed: all {totalOps} operations failed";
+                job.Result = new { errors };
+                job.CompletedAt = DateTime.UtcNow;
+            }
         }
         catch (OperationCanceledException)
         {
-            job.Status = JobStatus.Cancelled;
-            job.Message = "Cancelled";
-            job.CompletedAt = DateTime.UtcNow;
+            MarkCancelled(job);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Batch image generation job {JobId} failed", job.Id);
-            job.Status = JobStatus.Failed;
-            job.Message = ex.Message;
-            job.CompletedAt = DateTime.UtcNow;
+            MarkFailed(job, ex, "Batch image generation");
         }
     }
 
@@ -265,24 +291,15 @@ public class JobService
                 FileSizeBytes = result.AudioData?.Length
             };
 
-            job.Status = JobStatus.Completed;
-            job.Progress = 100;
-            job.Message = "Audio generation complete";
-            job.Result = response;
-            job.CompletedAt = DateTime.UtcNow;
+            CompleteJob(job, response, "Audio generation complete");
         }
         catch (OperationCanceledException)
         {
-            job.Status = JobStatus.Cancelled;
-            job.Message = "Cancelled";
-            job.CompletedAt = DateTime.UtcNow;
+            MarkCancelled(job);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Audio generation job {JobId} failed", job.Id);
-            job.Status = JobStatus.Failed;
-            job.Message = ex.Message;
-            job.CompletedAt = DateTime.UtcNow;
+            MarkFailed(job, ex, "Audio generation");
         }
     }
 
@@ -318,76 +335,69 @@ public class JobService
 
                 try
                 {
-                    var stepResult = await ExecutePipelineStepAsync(step, stepResults, job.Cts.Token);
+                    var stepResult = await ExecutePipelineStepAsync(step, job.Cts.Token);
                     stepStatus.Status = "completed";
                     stepStatus.Result = stepResult;
+                    job.SuccessCount++;
                 }
                 catch (Exception ex)
                 {
                     stepStatus.Status = "failed";
                     stepStatus.Result = ex.Message;
+                    job.FailedCount++;
                     _logger.LogWarning(ex, "Pipeline step {StepIndex} ({Action}) failed", i, step.Action);
                 }
 
                 stepResults.Add(stepStatus);
             }
 
+            var hasFailures = stepResults.Any(s => s.Status == "failed");
+            var pipelineStatus = hasFailures ? "completed_with_errors" : "completed";
+
             var pipelineResponse = new PipelineResponse
             {
                 PipelineId = job.Id,
                 Name = pipelineRequest.Name,
-                Status = "completed",
+                Status = pipelineStatus,
                 Steps = stepResults,
                 CreatedAt = job.CreatedAt
             };
 
             job.Status = JobStatus.Completed;
             job.Progress = 100;
-            job.Message = $"Pipeline '{pipelineRequest.Name}' complete";
+            job.Message = hasFailures
+                ? $"Pipeline '{pipelineRequest.Name}': {job.SuccessCount} succeeded, {job.FailedCount} failed"
+                : $"Pipeline '{pipelineRequest.Name}' complete ({job.SuccessCount} steps)";
             job.Result = pipelineResponse;
             job.CompletedAt = DateTime.UtcNow;
         }
         catch (OperationCanceledException)
         {
-            job.Status = JobStatus.Cancelled;
-            job.Message = "Pipeline cancelled";
-            job.CompletedAt = DateTime.UtcNow;
+            MarkCancelled(job);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Pipeline job {JobId} failed", job.Id);
-            job.Status = JobStatus.Failed;
-            job.Message = ex.Message;
-            job.CompletedAt = DateTime.UtcNow;
+            MarkFailed(job, ex, "Pipeline");
         }
     }
 
-    private async Task<object?> ExecutePipelineStepAsync(PipelineStep step, List<PipelineStepStatus> previousResults, CancellationToken ct)
+    private async Task<object?> ExecutePipelineStepAsync(PipelineStep step, CancellationToken ct)
     {
         var p = step.Params ?? new Dictionary<string, object>();
 
-        switch (step.Action.ToLowerInvariant())
+        return step.Action.ToLowerInvariant() switch
         {
-            case "generate_image":
-                return await PipelineGenerateImageAsync(p, ct);
-
-            case "generate_audio":
-                return await PipelineGenerateAudioAsync(p, ct);
-
-            case "list_models":
-                return await _sdService.GetModelsAsync();
-
-            case "list_speakers":
-                return await _voicevoxService.GetSpeakersAsync();
-
-            case "check_status":
-                var sd = await _sdService.CheckConnectionAsync();
-                var vv = await _voicevoxService.CheckConnectionAsync();
-                return new { stable_diffusion = sd, voicevox = vv };
-
-            default:
-                throw new InvalidOperationException($"Unknown pipeline action: {step.Action}");
-        }
+            "generate_image" => await PipelineGenerateImageAsync(p, ct),
+            "generate_audio" => await PipelineGenerateAudioAsync(p, ct),
+            "list_models" => await _sdService.GetModelsAsync(),
+            "list_speakers" => await _voicevoxService.GetSpeakersAsync(),
+            "check_status" => new
+            {
+                stable_diffusion = await _sdService.CheckConnectionAsync(),
+                voicevox = await _voicevoxService.CheckConnectionAsync()
+            },
+            _ => throw new InvalidOperationException($"Unknown pipeline action: {step.Action}")
+        };
     }
 
     private async Task<object> PipelineGenerateImageAsync(Dictionary<string, object> p, CancellationToken ct)
@@ -409,7 +419,8 @@ public class JobService
         };
 
         var result = await _sdService.GenerateAsync(request, ct);
-        if (!result.Success) throw new Exception(result.ErrorMessage);
+        if (!result.Success)
+            throw new InvalidOperationException($"Image generation failed: {result.ErrorMessage}");
 
         foreach (var img in result.GeneratedImages)
             await _databaseService.SaveImageMetadataAsync(img);
@@ -432,7 +443,8 @@ public class JobService
         };
 
         var result = await _voicevoxService.GenerateAudioAsync(audioParams, ct);
-        if (!result.Success) throw new Exception(result.ErrorMessage);
+        if (!result.Success)
+            throw new InvalidOperationException($"Audio generation failed: {result.ErrorMessage}");
 
         return new AudioGenerateApiResponse
         {
@@ -442,6 +454,22 @@ public class JobService
     }
 
     // ── Helpers ──
+
+    private ImageGenerationRequest BuildImageRequest(ImageGenerateApiRequest request) => new()
+    {
+        Prompt = request.Prompt,
+        NegativePrompt = request.NegativePrompt,
+        Model = request.Model ?? _config.Defaults.Model,
+        Lora = request.Lora,
+        LoraWeight = request.LoraWeight ?? _config.Defaults.LoraWeight,
+        Steps = request.Steps ?? _config.Defaults.Steps,
+        CfgScale = request.CfgScale ?? _config.Defaults.CfgScale,
+        Width = request.Width ?? _config.Defaults.Width,
+        Height = request.Height ?? _config.Defaults.Height,
+        SamplerName = request.Sampler ?? _config.Defaults.Sampler,
+        CharName = request.CharName,
+        BatchCount = request.BatchCount
+    };
 
     private JobInfo CreateJob(JobType type)
     {
@@ -455,20 +483,41 @@ public class JobService
         return job;
     }
 
+    private static void CompleteJob(JobInfo job, object result, string message)
+    {
+        job.Status = JobStatus.Completed;
+        job.Progress = 100;
+        job.Message = message;
+        job.Result = result;
+        job.CompletedAt = DateTime.UtcNow;
+    }
+
+    private static void MarkCancelled(JobInfo job)
+    {
+        job.Status = JobStatus.Cancelled;
+        job.Message = "Cancelled";
+        job.CompletedAt = DateTime.UtcNow;
+    }
+
+    private void MarkFailed(JobInfo job, Exception ex, string context)
+    {
+        _logger.LogError(ex, "{Context} job {JobId} failed", context, job.Id);
+        job.Status = JobStatus.Failed;
+        job.Message = ex.Message;
+        job.CompletedAt = DateTime.UtcNow;
+    }
+
     private static T? GetParam<T>(Dictionary<string, object> p, string key)
     {
         if (!p.TryGetValue(key, out var value)) return default;
         if (value is T typed) return typed;
-        try
+
+        if (value is System.Text.Json.JsonElement je)
         {
-            if (value is System.Text.Json.JsonElement je)
-            {
-                var json = je.GetRawText();
-                return System.Text.Json.JsonSerializer.Deserialize<T>(json);
-            }
-            return (T)Convert.ChangeType(value, typeof(T));
+            return System.Text.Json.JsonSerializer.Deserialize<T>(je.GetRawText());
         }
-        catch { return default; }
+
+        return (T)Convert.ChangeType(value, Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T));
     }
 
     public static ImageInfoResponse MapImageToResponse(ImageMetadata img) => new()
@@ -500,6 +549,14 @@ public class JobService
         Message = job.Message,
         CreatedAt = job.CreatedAt,
         CompletedAt = job.CompletedAt,
-        Result = job.Status == JobStatus.Completed ? job.Result : null
+        Result = job.Status is JobStatus.Completed or JobStatus.Failed ? job.Result : null
     };
+
+    public void Dispose()
+    {
+        _cleanupTimer.Dispose();
+        foreach (var job in _jobs.Values)
+            job.Dispose();
+        _jobs.Clear();
+    }
 }
