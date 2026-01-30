@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>InsightMediaGenerator</RootNamespace>
+    <AssemblyName>InsightMediaGenerator.Api</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+  </ItemGroup>
+
+  <!-- Link existing Models from WPF project -->
+  <ItemGroup>
+    <Compile Include="..\InsightMediaGenerator\Models\AppConfig.cs" Link="Models\AppConfig.cs" />
+    <Compile Include="..\InsightMediaGenerator\Models\ImageGenerationRequest.cs" Link="Models\ImageGenerationRequest.cs" />
+    <Compile Include="..\InsightMediaGenerator\Models\ImageMetadata.cs" Link="Models\ImageMetadata.cs" />
+    <Compile Include="..\InsightMediaGenerator\Models\AudioGenerationParams.cs" Link="Models\AudioGenerationParams.cs" />
+    <Compile Include="..\InsightMediaGenerator\Models\CharacterPrompt.cs" Link="Models\CharacterPrompt.cs" />
+    <Compile Include="..\InsightMediaGenerator\Models\Speaker.cs" Link="Models\Speaker.cs" />
+    <Compile Include="..\InsightMediaGenerator\Models\JsonFileRecord.cs" Link="Models\JsonFileRecord.cs" />
+  </ItemGroup>
+
+  <!-- Link existing Service interfaces -->
+  <ItemGroup>
+    <Compile Include="..\InsightMediaGenerator\Services\Interfaces\IStableDiffusionService.cs" Link="Services\Interfaces\IStableDiffusionService.cs" />
+    <Compile Include="..\InsightMediaGenerator\Services\Interfaces\IVoicevoxService.cs" Link="Services\Interfaces\IVoicevoxService.cs" />
+    <Compile Include="..\InsightMediaGenerator\Services\Interfaces\IFileService.cs" Link="Services\Interfaces\IFileService.cs" />
+    <Compile Include="..\InsightMediaGenerator\Services\Interfaces\IDatabaseService.cs" Link="Services\Interfaces\IDatabaseService.cs" />
+  </ItemGroup>
+
+  <!-- Link existing Service implementations -->
+  <ItemGroup>
+    <Compile Include="..\InsightMediaGenerator\Services\StableDiffusionService.cs" Link="Services\StableDiffusionService.cs" />
+    <Compile Include="..\InsightMediaGenerator\Services\VoicevoxService.cs" Link="Services\VoicevoxService.cs" />
+    <Compile Include="..\InsightMediaGenerator\Services\FileService.cs" Link="Services\FileService.cs" />
+    <Compile Include="..\InsightMediaGenerator\Services\DatabaseService.cs" Link="Services\DatabaseService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
