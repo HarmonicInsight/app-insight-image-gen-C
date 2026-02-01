@@ -45,6 +45,8 @@
                 <!-- Menu -->
                 <Menu Grid.Column="1" VerticalAlignment="Center" Margin="20,0,0,0">
                     <MenuItem Header="ファイル">
+                        <MenuItem Header="Stable Diffusion を起動" Command="{Binding LaunchStableDiffusionCommand}"/>
+                        <Separator/>
                         <MenuItem Header="設定フォルダを開く" Click="OpenSettingsFolder_Click"/>
                         <Separator/>
                         <MenuItem Header="終了" Click="Exit_Click"/>
@@ -186,6 +188,11 @@
                     <TextBlock Text="Stable Diffusion: " Foreground="{StaticResource TextTertiaryBrush}" FontSize="11"/>
                     <TextBlock Text="{Binding StableDiffusionStatus, FallbackValue=未接続}"
                                Foreground="{StaticResource TextTertiaryBrush}" FontSize="11"/>
+                    <Button Content="起動" Style="{StaticResource GhostButtonStyle}"
+                            Command="{Binding LaunchStableDiffusionCommand}"
+                            FontSize="10" Padding="6,2" Margin="4,0,0,0"
+                            Foreground="{StaticResource Accent500Brush}"
+                            Visibility="{Binding CanLaunchSd, Converter={StaticResource BoolToVisibilityConverter}}"/>
                     <TextBlock Text="  |  " Foreground="{StaticResource BorderDefaultBrush}" FontSize="11"/>
                     <TextBlock Text="VOICEVOX: " Foreground="{StaticResource TextTertiaryBrush}" FontSize="11"/>
                     <TextBlock Text="{Binding VoicevoxStatus, FallbackValue=未接続}"
