@@ -222,8 +222,7 @@ public partial class MainViewModel : ObservableObject
         var message = $"InsightImageGen ライセンス情報\n\n" +
                       $"現在のプラン: {planInfo}\n\n" +
                       $"ライセンスキー: {(string.IsNullOrEmpty(LicenseKey) ? "未設定" : MaskLicenseKey(LicenseKey))}\n\n" +
-                      "ライセンスを購入または更新するには:\n" +
-                      "https://harmonic-insight.com/products/insight-image-gen";
+                      "ライセンスの購入・更新については管理者にお問い合わせください。";
 
         var result = MessageBox.Show(
             message,
