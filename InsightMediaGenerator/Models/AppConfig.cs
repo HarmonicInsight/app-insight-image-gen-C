@@ -45,6 +45,9 @@ public class StableDiffusionConfig
 
     [JsonPropertyName("output_path")]
     public string OutputPath { get; set; } = "";
+
+    [JsonPropertyName("webui_bat_path")]
+    public string WebuiBatPath { get; set; } = "";
 }
 
 public class VoicevoxConfig

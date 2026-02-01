@@ -518,6 +518,29 @@
                 <Setter Property="Background" Value="#14FFFFFF"/>
                 <Setter Property="Foreground" Value="{StaticResource TextOnDarkBrush}"/>
             </Trigger>
+            <!-- Submenu items need dark text on light dropdown background -->
+            <Trigger Property="Role" Value="SubmenuItem">
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            </Trigger>
+            <Trigger Property="Role" Value="SubmenuHeader">
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            </Trigger>
+            <MultiTrigger>
+                <MultiTrigger.Conditions>
+                    <Condition Property="Role" Value="SubmenuItem"/>
+                    <Condition Property="IsHighlighted" Value="True"/>
+                </MultiTrigger.Conditions>
+                <Setter Property="Background" Value="{StaticResource BgHoverBrush}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            </MultiTrigger>
+            <MultiTrigger>
+                <MultiTrigger.Conditions>
+                    <Condition Property="Role" Value="SubmenuHeader"/>
+                    <Condition Property="IsHighlighted" Value="True"/>
+                </MultiTrigger.Conditions>
+                <Setter Property="Background" Value="{StaticResource BgHoverBrush}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            </MultiTrigger>
         </Style.Triggers>
     </Style>
 

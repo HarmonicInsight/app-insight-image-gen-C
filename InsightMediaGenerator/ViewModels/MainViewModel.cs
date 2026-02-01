@@ -1,10 +1,16 @@
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using InsightMediaGenerator.Models;
 
 namespace InsightMediaGenerator.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
+    private readonly AppConfig _config;
+
     public SimpleImageViewModel SimpleImage { get; }
     public BatchImageViewModel BatchImage { get; }
     public AudioViewModel Audio { get; }
@@ -30,14 +36,20 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private DateTime? _licenseExpiresAt;
 
+    [ObservableProperty]
+    private bool _canLaunchSd;
+
     public MainViewModel(
         SimpleImageViewModel simpleImage,
         BatchImageViewModel batchImage,
-        AudioViewModel audio)
+        AudioViewModel audio,
+        AppConfig config)
     {
         SimpleImage = simpleImage;
         BatchImage = batchImage;
         Audio = audio;
+        _config = config;
+        CanLaunchSd = !string.IsNullOrEmpty(config.StableDiffusion.WebuiBatPath);
     }
 
     public async Task InitializeAsync()
@@ -109,6 +121,90 @@ public partial class MainViewModel : ObservableObject
         {
             StatusMessage = "待機中 - サービス未接続";
         }
+    }
+
+    [RelayCommand]
+    private void LaunchStableDiffusion()
+    {
+        var batPath = _config.StableDiffusion.WebuiBatPath;
+
+        if (string.IsNullOrEmpty(batPath))
+        {
+            MessageBox.Show(
+                "Stable Diffusion WebUI の起動パスが設定されていません。\n\n" +
+                "appsettings.json の stable_diffusion.webui_bat_path に\n" +
+                "webui-user.bat のパスを設定してください。\n\n" +
+                "例: \"C:\\\\stable-diffusion-webui\\\\webui-user.bat\"",
+                "Stable Diffusion 起動",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning
+            );
+            return;
+        }
+
+        if (!File.Exists(batPath))
+        {
+            MessageBox.Show(
+                $"指定されたファイルが見つかりません:\n{batPath}\n\n" +
+                "appsettings.json の stable_diffusion.webui_bat_path を確認してください。",
+                "Stable Diffusion 起動エラー",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error
+            );
+            return;
+        }
+
+        try
+        {
+            var workingDir = Path.GetDirectoryName(batPath) ?? "";
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = batPath,
+                    WorkingDirectory = workingDir,
+                    UseShellExecute = true
+                }
+            };
+            process.Start();
+
+            StatusMessage = "Stable Diffusion を起動中...";
+            StableDiffusionStatus = "起動中";
+
+            // Start polling for connection after launch
+            _ = PollStableDiffusionConnectionAsync();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Stable Diffusion の起動に失敗しました:\n{ex.Message}",
+                "起動エラー",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error
+            );
+        }
+    }
+
+    private async Task PollStableDiffusionConnectionAsync()
+    {
+        // Poll for connection every 5 seconds for up to 2 minutes
+        for (int i = 0; i < 24; i++)
+        {
+            await Task.Delay(5000);
+
+            // Re-check connection via SimpleImage ViewModel
+            await SimpleImage.CheckStatusCommand.ExecuteAsync(null);
+            if (SimpleImage.SdConnected)
+            {
+                UpdateStableDiffusionStatus(true);
+                await BatchImage.CheckStatusCommand.ExecuteAsync(null);
+                return;
+            }
+        }
+
+        // Timeout - still not connected
+        StableDiffusionStatus = "起動タイムアウト";
+        UpdateStatusMessage();
     }
 
     public void ShowLicenseDialog()
