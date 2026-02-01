@@ -1,0 +1,168 @@
+<UserControl x:Class="InsightMediaGenerator.Views.AiAssistantView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="900">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="350"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ============================== -->
+            <!-- 左: AIチャット                   -->
+            <!-- ============================== -->
+            <StackPanel Grid.Column="0" Margin="0,0,15,0">
+                <TextBlock Text="AIアシスタント" FontSize="16" FontWeight="Bold" Margin="0,0,0,4"/>
+                <TextBlock Text="日本語でイメージを伝えるとAIがプロンプトを生成します"
+                           Foreground="{StaticResource TextTertiaryBrush}" FontSize="12" Margin="0,0,0,15"/>
+
+                <!-- API設定 -->
+                <Border Background="{StaticResource BgElevatedBrush}" CornerRadius="8"
+                        Padding="12" Margin="0,0,0,12"
+                        BorderBrush="{StaticResource BorderDefaultBrush}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="API設定" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,8"/>
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="API URL" FontSize="12" VerticalAlignment="Center"/>
+                            <TextBox Grid.Column="1" Text="{Binding ApiUrl, UpdateSourceTrigger=PropertyChanged}"
+                                     Height="30" FontSize="12"/>
+                        </Grid>
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="APIキー" FontSize="12" VerticalAlignment="Center"/>
+                            <PasswordBox Grid.Column="1" Height="30" FontSize="12"
+                                         x:Name="ApiKeyBox"/>
+                        </Grid>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="モデル" FontSize="12" VerticalAlignment="Center"/>
+                            <ComboBox Grid.Column="1" ItemsSource="{Binding Models}"
+                                      SelectedItem="{Binding SelectedModel}" Height="30" FontSize="12"
+                                      IsEditable="True"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- テンプレート選択 -->
+                <TextBlock Text="テンプレート" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,5"/>
+                <ComboBox ItemsSource="{Binding Templates}" SelectedItem="{Binding SelectedTemplate}"
+                          Height="34" Margin="0,0,0,12"/>
+
+                <!-- システムプロンプト -->
+                <TextBlock Text="システムプロンプト" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,5"/>
+                <TextBox Text="{Binding SystemPrompt, UpdateSourceTrigger=PropertyChanged}"
+                         AcceptsReturn="True" TextWrapping="Wrap" Height="80" Margin="0,0,0,12" FontSize="12"/>
+
+                <!-- ユーザーメッセージ -->
+                <TextBlock Text="あなたのメッセージ（日本語OK）" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,5"/>
+                <TextBox Text="{Binding UserMessage, UpdateSourceTrigger=PropertyChanged}"
+                         AcceptsReturn="True" TextWrapping="Wrap" Height="80" Margin="0,0,0,10" FontSize="13"/>
+
+                <!-- 送信ボタン -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <Button Content="AIに送信" Command="{Binding SendToAiCommand}"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Width="120" Height="38" IsEnabled="{Binding IsSending, Converter={StaticResource InverseBoolConverter}}"/>
+                    <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center"
+                               Foreground="{StaticResource TextTertiaryBrush}" FontSize="12" Margin="12,0,0,0"/>
+                </StackPanel>
+
+                <!-- AIレスポンス -->
+                <TextBlock Text="AIレスポンス" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,5"/>
+                <Border Background="{StaticResource BgElevatedBrush}" CornerRadius="8"
+                        BorderBrush="{StaticResource BorderDefaultBrush}" BorderThickness="1"
+                        Padding="10" MinHeight="80">
+                    <TextBlock Text="{Binding AiResponse}" TextWrapping="Wrap" FontSize="12"
+                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                </Border>
+
+                <!-- 抽出されたプロンプト -->
+                <StackPanel Margin="0,12,0,0"
+                            Visibility="{Binding ExtractedPrompt, Converter={StaticResource StringToVisibilityConverter}}">
+                    <TextBlock Text="抽出されたプロンプト" FontWeight="SemiBold" FontSize="13"
+                               Foreground="{StaticResource Success600Brush}" Margin="0,0,0,5"/>
+                    <Border Background="#0F16A34A" CornerRadius="6" Padding="10" Margin="0,0,0,5">
+                        <TextBlock Text="{Binding ExtractedPrompt}" TextWrapping="Wrap" FontSize="12"/>
+                    </Border>
+                    <Button Content="プロンプトをコピー" Command="{Binding CopyExtractedPromptCommand}"
+                            HorizontalAlignment="Left" Padding="10,4" FontSize="11"/>
+                </StackPanel>
+
+                <StackPanel Margin="0,8,0,0"
+                            Visibility="{Binding ExtractedNegativePrompt, Converter={StaticResource StringToVisibilityConverter}}">
+                    <TextBlock Text="抽出されたネガティブ" FontWeight="SemiBold" FontSize="13"
+                               Foreground="{StaticResource Warning600Brush}" Margin="0,0,0,5"/>
+                    <Border Background="#0FCA8A04" CornerRadius="6" Padding="10" Margin="0,0,0,5">
+                        <TextBlock Text="{Binding ExtractedNegativePrompt}" TextWrapping="Wrap" FontSize="12"/>
+                    </Border>
+                    <Button Content="ネガティブをコピー" Command="{Binding CopyExtractedNegativeCommand}"
+                            HorizontalAlignment="Left" Padding="10,4" FontSize="11"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- ============================== -->
+            <!-- 右: JSON プレビュー             -->
+            <!-- ============================== -->
+            <StackPanel Grid.Column="1">
+                <TextBlock Text="リクエストJSON (雛形)" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,5"/>
+                <TextBlock Text="このJSONがAPIに送信されます" FontSize="11"
+                           Foreground="{StaticResource TextTertiaryBrush}" Margin="0,0,0,8"/>
+
+                <Border Background="#1C1917" CornerRadius="8" Padding="12" MinHeight="250">
+                    <TextBox Text="{Binding RequestJsonPreview, Mode=OneWay}"
+                             IsReadOnly="True" Background="Transparent"
+                             Foreground="#E8D5A3" FontFamily="Consolas"
+                             FontSize="11" TextWrapping="Wrap" AcceptsReturn="True"
+                             BorderThickness="0" VerticalScrollBarVisibility="Auto"/>
+                </Border>
+
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <Button Content="JSONコピー" Command="{Binding CopyRequestJsonCommand}"
+                            Padding="10,4" FontSize="11" Margin="0,0,6,0"/>
+                    <Button Content="ファイル保存" Command="{Binding ExportRequestJsonCommand}"
+                            Padding="10,4" FontSize="11"/>
+                </StackPanel>
+
+                <!-- 使い方ガイド -->
+                <Border Background="{StaticResource InfoBgBrush}" CornerRadius="8"
+                        Padding="12" Margin="0,20,0,0"
+                        BorderBrush="{StaticResource BorderDefaultBrush}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="使い方" FontWeight="SemiBold" FontSize="12"
+                                   Foreground="{StaticResource Info600Brush}" Margin="0,0,0,6"/>
+                        <TextBlock TextWrapping="Wrap" FontSize="11" LineHeight="18"
+                                   Foreground="{StaticResource TextSecondaryBrush}">
+                            <Run Text="1. テンプレートを選ぶ"/><LineBreak/>
+                            <Run Text="2. 日本語でイメージを入力"/><LineBreak/>
+                            <Run Text="   例: 「桜の下で剣を持つ女騎士」"/><LineBreak/>
+                            <Run Text="3. 「AIに送信」をクリック"/><LineBreak/>
+                            <Run Text="4. 生成されたプロンプトをコピーして"/><LineBreak/>
+                            <Run Text="   Simple Image タブに貼り付け"/><LineBreak/>
+                            <LineBreak/>
+                            <Run Text="APIキーの設定:"/><LineBreak/>
+                            <Run Text="環境変数 OPENAI_API_KEY を設定するか"/><LineBreak/>
+                            <Run Text="上の入力欄に直接入力してください。"/><LineBreak/>
+                            <LineBreak/>
+                            <Run Text="JSON雛形はファイル保存して"/><LineBreak/>
+                            <Run Text="curlやプログラムから利用できます。"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

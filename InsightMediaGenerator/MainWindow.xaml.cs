@@ -70,6 +70,22 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ViewPromptBuilder_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+        {
+            vm.SelectedTabIndex = 3;
+        }
+    }
+
+    private void ViewAiAssistant_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+        {
+            vm.SelectedTabIndex = 4;
+        }
+    }
+
     // ========================================
     // Menu: ヘルプ
     // ========================================
@@ -93,6 +109,12 @@ public partial class MainWindow : Window
             "  - voicevox.api_url: VOICEVOX の API URL\n\n" +
             "【音声生成】\n" +
             "VOICEVOX を起動した状態で Audio タブからテキスト読み上げが可能です\n\n" +
+            "【プロンプトビルダー】\n" +
+            "日本語のキーワードをクリックするだけでプロンプトを組み立てられます\n" +
+            "ネガティブキーワードもワンクリックで ON/OFF 切り替え可能です\n\n" +
+            "【AIアシスタント】\n" +
+            "日本語でイメージを伝えるとAIが英語プロンプトを生成します\n" +
+            "環境変数 OPENAI_API_KEY にAPIキーを設定してください\n\n" +
             "【ライセンス】\n" +
             "環境変数 INIG_LICENSE_KEY にライセンスキーを設定してください",
             "ドキュメント",

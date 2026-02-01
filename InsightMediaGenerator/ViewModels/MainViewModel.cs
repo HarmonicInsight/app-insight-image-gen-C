@@ -14,6 +14,8 @@ public partial class MainViewModel : ObservableObject
     public SimpleImageViewModel SimpleImage { get; }
     public BatchImageViewModel BatchImage { get; }
     public AudioViewModel Audio { get; }
+    public PromptBuilderViewModel PromptBuilder { get; }
+    public AiAssistantViewModel AiAssistant { get; }
 
     [ObservableProperty]
     private int _selectedTabIndex;
@@ -43,11 +45,15 @@ public partial class MainViewModel : ObservableObject
         SimpleImageViewModel simpleImage,
         BatchImageViewModel batchImage,
         AudioViewModel audio,
+        PromptBuilderViewModel promptBuilder,
+        AiAssistantViewModel aiAssistant,
         AppConfig config)
     {
         SimpleImage = simpleImage;
         BatchImage = batchImage;
         Audio = audio;
+        PromptBuilder = promptBuilder;
+        AiAssistant = aiAssistant;
         _config = config;
         CanLaunchSd = !string.IsNullOrEmpty(config.StableDiffusion.WebuiBatPath);
     }
