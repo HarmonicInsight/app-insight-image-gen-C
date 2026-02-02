@@ -32,10 +32,15 @@ public partial class App : Application
         services.AddHttpClient<IStableDiffusionService, StableDiffusionService>();
         services.AddHttpClient<IVoicevoxService, VoicevoxService>();
 
+        // Register HTTP client for AI Assistant
+        services.AddHttpClient<AiAssistantViewModel>();
+
         // Register ViewModels
         services.AddTransient<SimpleImageViewModel>();
         services.AddTransient<BatchImageViewModel>();
         services.AddTransient<AudioViewModel>();
+        services.AddTransient<PromptBuilderViewModel>();
+        services.AddTransient<AiAssistantViewModel>();
         services.AddTransient<MainViewModel>();
 
         // Register MainWindow

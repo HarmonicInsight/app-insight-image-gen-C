@@ -1,0 +1,15 @@
+{
+  "model": "gpt-4o-mini",
+  "messages": [
+    {
+      "role": "system",
+      "content": "あなたはStable Diffusionプロンプトの専門家です。ユーザーが入力したプロンプトを改善し、より高品質な画像が生成されるようにしてください。品質タグ、光の表現、構図の指定を追加して改善版を提案してください。\n\n出力形式:\n{\"prompt\": \"改善された英語プロンプト\", \"negative_prompt\": \"推奨ネガティブプロンプト\"}"
+    },
+    {
+      "role": "user",
+      "content": "ここに改善したいプロンプトを入力してください"
+    }
+  ],
+  "max_tokens": 1024,
+  "temperature": 0.7
+}

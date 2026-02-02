@@ -58,6 +58,8 @@
                         <MenuItem Header="Simple Image" Click="ViewSimpleImage_Click"/>
                         <MenuItem Header="Batch Image" Click="ViewBatchImage_Click"/>
                         <MenuItem Header="Audio" Click="ViewAudio_Click"/>
+                        <MenuItem Header="プロンプトビルダー" Click="ViewPromptBuilder_Click"/>
+                        <MenuItem Header="AIアシスタント" Click="ViewAiAssistant_Click"/>
                     </MenuItem>
                     <MenuItem Header="ヘルプ">
                         <MenuItem Header="ドキュメント" Click="OpenDocs_Click"/>
@@ -157,6 +159,12 @@
                 </TabItem>
                 <TabItem Header="Audio">
                     <views:AudioView DataContext="{Binding Audio}"/>
+                </TabItem>
+                <TabItem Header="プロンプトビルダー">
+                    <views:PromptBuilderView DataContext="{Binding PromptBuilder}"/>
+                </TabItem>
+                <TabItem Header="AIアシスタント">
+                    <views:AiAssistantView DataContext="{Binding AiAssistant}"/>
                 </TabItem>
             </TabControl>
         </Border>
