@@ -95,7 +95,7 @@
                             Visibility="{Binding ExtractedPrompt, Converter={StaticResource StringToVisibilityConverter}}">
                     <TextBlock Text="抽出されたプロンプト" FontWeight="SemiBold" FontSize="13"
                                Foreground="{StaticResource Success600Brush}" Margin="0,0,0,5"/>
-                    <Border Background="#0F16A34A" CornerRadius="6" Padding="10" Margin="0,0,0,5">
+                    <Border Background="{StaticResource SuccessBgBrush}" CornerRadius="6" Padding="10" Margin="0,0,0,5">
                         <TextBlock Text="{Binding ExtractedPrompt}" TextWrapping="Wrap" FontSize="12"/>
                     </Border>
                     <Button Content="プロンプトをコピー" Command="{Binding CopyExtractedPromptCommand}"
@@ -106,7 +106,7 @@
                             Visibility="{Binding ExtractedNegativePrompt, Converter={StaticResource StringToVisibilityConverter}}">
                     <TextBlock Text="抽出されたネガティブ" FontWeight="SemiBold" FontSize="13"
                                Foreground="{StaticResource Warning600Brush}" Margin="0,0,0,5"/>
-                    <Border Background="#0FCA8A04" CornerRadius="6" Padding="10" Margin="0,0,0,5">
+                    <Border Background="{StaticResource WarningBgBrush}" CornerRadius="6" Padding="10" Margin="0,0,0,5">
                         <TextBlock Text="{Binding ExtractedNegativePrompt}" TextWrapping="Wrap" FontSize="12"/>
                     </Border>
                     <Button Content="ネガティブをコピー" Command="{Binding CopyExtractedNegativeCommand}"
@@ -122,10 +122,10 @@
                 <TextBlock Text="このJSONがAPIに送信されます" FontSize="11"
                            Foreground="{StaticResource TextTertiaryBrush}" Margin="0,0,0,8"/>
 
-                <Border Background="#1C1917" CornerRadius="8" Padding="12" MinHeight="250">
+                <Border Background="{StaticResource BgTitlebarBrush}" CornerRadius="8" Padding="12" MinHeight="250">
                     <TextBox Text="{Binding RequestJsonPreview, Mode=OneWay}"
                              IsReadOnly="True" Background="Transparent"
-                             Foreground="#E8D5A3" FontFamily="Consolas"
+                             Foreground="{StaticResource Accent200Brush}" FontFamily="Consolas"
                              FontSize="11" TextWrapping="Wrap" AcceptsReturn="True"
                              BorderThickness="0" VerticalScrollBarVisibility="Auto"/>
                 </Border>

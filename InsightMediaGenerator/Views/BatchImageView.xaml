@@ -15,8 +15,8 @@
             </Border>
 
             <!-- JSON File Upload Area -->
-            <Border BorderBrush="#ccc" BorderThickness="2" CornerRadius="8"
-                    Background="#f8f9fa" Padding="20" Margin="0,0,0,15">
+            <Border BorderBrush="{StaticResource BorderDefaultBrush}" BorderThickness="2" CornerRadius="8"
+                    Background="{StaticResource BgElevatedBrush}" Padding="20" Margin="0,0,0,15">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="Drop JSON file here or click to select"
                                HorizontalAlignment="Center" Margin="0,0,0,10"/>
@@ -58,7 +58,7 @@
             <!-- Character Selection -->
             <TextBlock Text="Characters" FontWeight="SemiBold" Margin="0,0,0,5"/>
             <CheckBox Content="Select All" IsChecked="{Binding SelectAllCharacters}" Margin="0,0,0,5"/>
-            <Border BorderBrush="#ddd" BorderThickness="1" CornerRadius="4"
+            <Border BorderBrush="{StaticResource BorderDefaultBrush}" BorderThickness="1" CornerRadius="4"
                     MaxHeight="200" Margin="0,0,0,15">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding Characters}">
@@ -171,7 +171,7 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button Content="Generate Batch" Command="{Binding GenerateBatchCommand}"
                         Width="150" Height="40" Margin="0,0,10,0"
-                        Background="#0056b3" Foreground="White" FontWeight="SemiBold"/>
+                        Style="{StaticResource PrimaryButtonStyle}"/>
                 <Button Content="Cancel" Command="{Binding CancelGenerationCommand}"
                         Width="100" Height="40"
                         IsEnabled="{Binding IsGenerating}"/>

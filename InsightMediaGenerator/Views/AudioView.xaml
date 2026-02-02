@@ -93,11 +93,11 @@
             <!-- Generate Button -->
             <Button Content="Generate Audio" Command="{Binding GenerateCommand}"
                     Width="150" Height="40" Margin="0,0,0,20"
-                    Background="#28a745" Foreground="White" FontWeight="SemiBold"
+                    Style="{StaticResource PrimaryButtonStyle}"
                     HorizontalAlignment="Center"/>
 
             <!-- Audio Player Controls -->
-            <Border BorderBrush="#ddd" BorderThickness="1" CornerRadius="8"
+            <Border BorderBrush="{StaticResource BorderDefaultBrush}" BorderThickness="1" CornerRadius="8"
                     Padding="15" Margin="0,0,0,15"
                     Visibility="{Binding HasGeneratedAudio, Converter={StaticResource BoolToVisibilityConverter}}">
                 <StackPanel>

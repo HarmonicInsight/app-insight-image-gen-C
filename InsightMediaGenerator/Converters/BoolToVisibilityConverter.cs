@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Media;
 
 namespace InsightMediaGenerator.Converters;
 
@@ -65,9 +66,13 @@ public class BoolToColorConverter : IValueConverter
     {
         if (value is bool boolValue)
         {
-            return boolValue ? "#28a745" : "#dc3545"; // Green for connected, Red for disconnected
+            // Success600 for connected, Error600 for disconnected
+            var color = boolValue ? (Color)ColorConverter.ConvertFromString("#16A34A")
+                                  : (Color)ColorConverter.ConvertFromString("#DC2626");
+            return new SolidColorBrush(color);
         }
-        return "#6c757d"; // Gray for unknown
+        // TextTertiary for unknown
+        return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#A8A29E"));
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
