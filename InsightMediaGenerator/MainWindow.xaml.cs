@@ -26,7 +26,8 @@ public partial class MainWindow : Window
     {
         var appDataPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "InsightImageGen"
+            "HarmonicInsight",
+            "INIG"
         );
 
         if (!Directory.Exists(appDataPath))

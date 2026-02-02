@@ -16,6 +16,7 @@
     <Color x:Key="BgHoverColor">#EEEBE5</Color>
     <Color x:Key="BgActiveColor">#E8E4DC</Color>
     <Color x:Key="BgTitlebarColor">#2C2820</Color>
+    <Color x:Key="BgSidebarColor">#F3F0EB</Color>
     <Color x:Key="BgOverlayColor">#661C1917</Color>
 
     <SolidColorBrush x:Key="BgPrimaryBrush" Color="{StaticResource BgPrimaryColor}"/>
@@ -25,20 +26,21 @@
     <SolidColorBrush x:Key="BgHoverBrush" Color="{StaticResource BgHoverColor}"/>
     <SolidColorBrush x:Key="BgActiveBrush" Color="{StaticResource BgActiveColor}"/>
     <SolidColorBrush x:Key="BgTitlebarBrush" Color="{StaticResource BgTitlebarColor}"/>
+    <SolidColorBrush x:Key="BgSidebarBrush" Color="{StaticResource BgSidebarColor}"/>
 
     <!-- ============================================================ -->
     <!-- Accent Colors (Gold) - Brand Primary                         -->
     <!-- ============================================================ -->
-    <Color x:Key="Accent50Color">#FAF5E8</Color>
-    <Color x:Key="Accent100Color">#F0E6C8</Color>
-    <Color x:Key="Accent200Color">#E8D5A3</Color>
-    <Color x:Key="Accent300Color">#D4B96E</Color>
-    <Color x:Key="Accent400Color">#C9A84C</Color>
+    <Color x:Key="Accent50Color">#FDF9EF</Color>
+    <Color x:Key="Accent100Color">#F9F0D9</Color>
+    <Color x:Key="Accent200Color">#F0E6C8</Color>
+    <Color x:Key="Accent300Color">#E5D5A0</Color>
+    <Color x:Key="Accent400Color">#D4BC6A</Color>
     <Color x:Key="Accent500Color">#B8942F</Color>
-    <Color x:Key="Accent600Color">#A68325</Color>
-    <Color x:Key="Accent700Color">#8C711E</Color>
-    <Color x:Key="Accent800Color">#6E5918</Color>
-    <Color x:Key="Accent900Color">#5C4A12</Color>
+    <Color x:Key="Accent600Color">#8C711E</Color>
+    <Color x:Key="Accent700Color">#6B5518</Color>
+    <Color x:Key="Accent800Color">#4A3B10</Color>
+    <Color x:Key="Accent900Color">#2D2408</Color>
     <Color x:Key="AccentMutedColor">#14B8942F</Color>
     <Color x:Key="AccentSubtleColor">#0AB8942F</Color>
 
@@ -57,12 +59,12 @@
 
     <!-- Accent Gradient -->
     <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#C9A84C" Offset="0"/>
+        <GradientStop Color="#D4BC6A" Offset="0"/>
         <GradientStop Color="#B8942F" Offset="1"/>
     </LinearGradientBrush>
     <LinearGradientBrush x:Key="AccentGradientHoverBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#D4B96E" Offset="0"/>
-        <GradientStop Color="#C9A84C" Offset="1"/>
+        <GradientStop Color="#E5D5A0" Offset="0"/>
+        <GradientStop Color="#D4BC6A" Offset="1"/>
     </LinearGradientBrush>
 
     <!-- ============================================================ -->
@@ -117,6 +119,32 @@
     <SolidColorBrush x:Key="CatFolderBgBrush" Color="{StaticResource CatFolderBgColor}"/>
     <SolidColorBrush x:Key="CatCompareBrush" Color="{StaticResource CatCompareColor}"/>
     <SolidColorBrush x:Key="CatCompareBgBrush" Color="{StaticResource CatCompareBgColor}"/>
+
+    <!-- ============================================================ -->
+    <!-- Plan Tier Colors                                              -->
+    <!-- ============================================================ -->
+    <Color x:Key="PlanFreeColor">#A8A29E</Color>
+    <Color x:Key="PlanTrialColor">#2563EB</Color>
+    <Color x:Key="PlanStdColor">#16A34A</Color>
+    <Color x:Key="PlanProColor">#B8942F</Color>
+    <Color x:Key="PlanEntColor">#7C3AED</Color>
+
+    <SolidColorBrush x:Key="PlanFreeBrush" Color="{StaticResource PlanFreeColor}"/>
+    <SolidColorBrush x:Key="PlanTrialBrush" Color="{StaticResource PlanTrialColor}"/>
+    <SolidColorBrush x:Key="PlanStdBrush" Color="{StaticResource PlanStdColor}"/>
+    <SolidColorBrush x:Key="PlanProBrush" Color="{StaticResource PlanProColor}"/>
+    <SolidColorBrush x:Key="PlanEntBrush" Color="{StaticResource PlanEntColor}"/>
+
+    <!-- ============================================================ -->
+    <!-- Link Colors                                                   -->
+    <!-- ============================================================ -->
+    <Color x:Key="LinkDefaultColor">#B8942F</Color>
+    <Color x:Key="LinkHoverColor">#8C711E</Color>
+    <Color x:Key="LinkVisitedColor">#6B5518</Color>
+
+    <SolidColorBrush x:Key="LinkDefaultBrush" Color="{StaticResource LinkDefaultColor}"/>
+    <SolidColorBrush x:Key="LinkHoverBrush" Color="{StaticResource LinkHoverColor}"/>
+    <SolidColorBrush x:Key="LinkVisitedBrush" Color="{StaticResource LinkVisitedColor}"/>
 
     <!-- ============================================================ -->
     <!-- Text Colors                                                  -->

@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using InsightMediaGenerator.License;
 using InsightMediaGenerator.Models;
 
 namespace InsightMediaGenerator.ViewModels;
@@ -10,6 +11,7 @@ namespace InsightMediaGenerator.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     private readonly AppConfig _config;
+    private readonly InsightLicenseManager _licenseManager;
 
     public SimpleImageViewModel SimpleImage { get; }
     public BatchImageViewModel BatchImage { get; }
@@ -47,7 +49,8 @@ public partial class MainViewModel : ObservableObject
         AudioViewModel audio,
         PromptBuilderViewModel promptBuilder,
         AiAssistantViewModel aiAssistant,
-        AppConfig config)
+        AppConfig config,
+        InsightLicenseManager licenseManager)
     {
         SimpleImage = simpleImage;
         BatchImage = batchImage;
@@ -55,6 +58,7 @@ public partial class MainViewModel : ObservableObject
         PromptBuilder = promptBuilder;
         AiAssistant = aiAssistant;
         _config = config;
+        _licenseManager = licenseManager;
         CanLaunchSd = !string.IsNullOrEmpty(config.StableDiffusion.WebuiBatPath);
     }
 
@@ -76,18 +80,11 @@ public partial class MainViewModel : ObservableObject
 
     private async Task LoadLicenseInfoAsync()
     {
-        // TODO: Implement license loading from local storage or API
-        // For now, default to FREE plan
-        await Task.CompletedTask;
+        await _licenseManager.LoadAsync();
 
-        // Load from environment or config
-        var licenseKey = Environment.GetEnvironmentVariable("INIG_LICENSE_KEY");
-        if (!string.IsNullOrEmpty(licenseKey))
-        {
-            LicenseKey = licenseKey;
-            // TODO: Validate license and set CurrentPlan accordingly
-            // CurrentPlan = await ValidateLicenseAsync(licenseKey);
-        }
+        CurrentPlan = _licenseManager.CurrentPlan;
+        LicenseKey = _licenseManager.LicenseKey;
+        LicenseExpiresAt = _licenseManager.ExpiresAt;
     }
 
     private async Task CheckServiceConnectionsAsync()
@@ -225,9 +222,11 @@ public partial class MainViewModel : ObservableObject
             _ => "不明"
         };
 
+        var maskedKey = string.IsNullOrEmpty(LicenseKey) ? "未設定" : InsightLicenseManager.MaskKey(LicenseKey);
+
         var message = $"InsightImageGen ライセンス情報\n\n" +
                       $"現在のプラン: {planInfo}\n\n" +
-                      $"ライセンスキー: {(string.IsNullOrEmpty(LicenseKey) ? "未設定" : MaskLicenseKey(LicenseKey))}\n\n" +
+                      $"ライセンスキー: {maskedKey}\n\n" +
                       "ライセンスの購入・更新については管理者にお問い合わせください。";
 
         var result = MessageBox.Show(
@@ -239,18 +238,14 @@ public partial class MainViewModel : ObservableObject
 
         if (result == MessageBoxResult.OK)
         {
-            // Open license activation dialog
             ShowLicenseActivationDialog();
         }
     }
 
     private void ShowLicenseActivationDialog()
     {
-        // TODO: Implement proper license activation dialog
-        // For now, show a simple input dialog concept
-
         var message = "ライセンスキーを入力してください:\n\n" +
-                      "形式: INIG-{プラン}-{YYMM}-{XXXX}-{XXXX}-{XXXX}\n" +
+                      "形式: INIG-{プラン}-{YYMM}-{HASH}-{SIG1}-{SIG2}\n" +
                       "例: INIG-PRO-2601-ABCD-EFGH-IJKL\n\n" +
                       "ライセンスキーの入力は今後のアップデートで\n" +
                       "専用ダイアログを実装予定です。\n\n" +
@@ -264,50 +259,13 @@ public partial class MainViewModel : ObservableObject
         );
     }
 
-    private static string MaskLicenseKey(string key)
-    {
-        if (string.IsNullOrEmpty(key) || key.Length < 10)
-            return "****";
-
-        // Show first 9 chars (INIG-XXX-) and mask the rest
-        return key[..9] + new string('*', key.Length - 9);
-    }
-
     /// <summary>
     /// Check if a feature is available for the current plan
     /// </summary>
-    public bool CanUseFeature(string featureKey)
-    {
-        // Feature availability based on INIG product features from products.ts
-        return featureKey switch
-        {
-            "generate_image" => true, // All plans
-            "generate_audio" => true, // All plans
-            "batch_image" => CurrentPlan is "TRIAL" or "STD" or "PRO" or "ENT",
-            "hi_res" => CurrentPlan is "TRIAL" or "PRO" or "ENT",
-            "cloud_sync" => CurrentPlan is "TRIAL" or "PRO" or "ENT",
-            _ => false
-        };
-    }
+    public bool CanUseFeature(string featureKey) => _licenseManager.CheckFeature(featureKey);
 
     /// <summary>
     /// Get the limit for a feature (returns -1 for unlimited)
     /// </summary>
-    public int GetFeatureLimit(string featureKey)
-    {
-        if (featureKey == "character_prompts")
-        {
-            return CurrentPlan switch
-            {
-                "FREE" => 3,
-                "TRIAL" => -1,
-                "STD" => 20,
-                "PRO" => -1,
-                "ENT" => -1,
-                _ => 3
-            };
-        }
-
-        return -1; // No limit by default
-    }
+    public int GetFeatureLimit(string featureKey) => _licenseManager.GetFeatureLimit(featureKey);
 }
