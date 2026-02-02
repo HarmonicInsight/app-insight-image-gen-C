@@ -35,7 +35,7 @@ public class StableDiffusionService : IStableDiffusionService
         }
     }
 
-    public async Task<IReadOnlyList<string>> GetModelsAsync()
+    public Task<IReadOnlyList<string>> GetModelsAsync()
     {
         var modelsPath = _fileService.ResolvePath(_config.StableDiffusion.ModelsPath);
         var models = new List<string>();
@@ -55,10 +55,10 @@ public class StableDiffusionService : IStableDiffusionService
             }
         }
 
-        return models.OrderBy(m => m).ToList();
+        return Task.FromResult<IReadOnlyList<string>>(models.OrderBy(m => m).ToList());
     }
 
-    public async Task<IReadOnlyList<string>> GetLorasAsync()
+    public Task<IReadOnlyList<string>> GetLorasAsync()
     {
         var loraPath = _fileService.ResolvePath(_config.StableDiffusion.LoraPath);
         var loras = new List<string>();
@@ -77,7 +77,7 @@ public class StableDiffusionService : IStableDiffusionService
             }
         }
 
-        return loras.OrderBy(l => l).ToList();
+        return Task.FromResult<IReadOnlyList<string>>(loras.OrderBy(l => l).ToList());
     }
 
     public async Task<ImageGenerationResult> GenerateAsync(ImageGenerationRequest request, CancellationToken cancellationToken = default)
