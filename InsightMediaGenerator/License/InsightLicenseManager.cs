@@ -8,8 +8,9 @@ namespace InsightMediaGenerator.License;
 
 /// <summary>
 /// InsightLicenseManager - ライセンス管理クラス (INIG)
-/// ライセンスキー形式: INIG-{Plan}-{YYMM}-{XXXX}-{XXXX}-{XXXX}
-/// {製品コード}-{プラン}-{YYMM}-{HASH}-{SIG1}-{SIG2}
+/// Insight-Common 標準ライセンスキー形式: PPPP-PLAN-YYMM-HASH-SIG1-SIG2
+/// PPPP=製品コード(INIG), PLAN=プラン, YYMM=有効期限(年月),
+/// HASH=メールSHA256 Base32(4文字), SIG1-SIG2=HMAC-SHA256署名 Base32(8文字)
 /// 保存先: %APPDATA%/HarmonicInsight/INIG/license.json
 /// </summary>
 public class InsightLicenseManager
@@ -82,7 +83,7 @@ public class InsightLicenseManager
 
         if (!LicenseKeyPattern.IsMatch(licenseKey))
         {
-            return (false, "ライセンスキーの形式が正しくありません。\n形式: INIG-{プラン}-{YYMM}-{XXXX}-{XXXX}-{XXXX}");
+            return (false, "ライセンスキーの形式が正しくありません。\n形式: INIG-{PLAN}-{YYMM}-{HASH}-{SIG1}-{SIG2}");
         }
 
         // Extract plan from key
@@ -92,13 +93,23 @@ public class InsightLicenseManager
         // TODO: Validate signature via HMAC-SHA256 against license server
         // For now, accept the key format and extract plan
 
+        // Expiry based on Insight-Common standard:
+        // FREE=perpetual, TRIAL=14 days, STD/PRO=annual, ENT=perpetual
+        DateTime? expiresAt = plan switch
+        {
+            "FREE" => null,
+            "TRIAL" => DateTime.UtcNow.AddDays(14),
+            "ENT" => null,
+            _ => DateTime.UtcNow.AddDays(365) // STD, PRO: annual
+        };
+
         _currentLicense = new LicenseInfo
         {
             Key = licenseKey,
             Email = email,
             Plan = plan,
             ActivatedAt = DateTime.UtcNow,
-            ExpiresAt = plan == "FREE" ? null : DateTime.UtcNow.AddDays(365),
+            ExpiresAt = expiresAt,
             ProductCode = ProductCode
         };
 

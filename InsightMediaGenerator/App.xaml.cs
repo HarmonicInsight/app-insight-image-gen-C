@@ -2,6 +2,7 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using InsightMediaGenerator.License;
 using InsightMediaGenerator.Models;
 using InsightMediaGenerator.Services;
 using InsightMediaGenerator.Services.Interfaces;
@@ -22,6 +23,9 @@ public partial class App : Application
         // Load configuration
         var config = LoadConfiguration();
         services.AddSingleton(config);
+
+        // Register license manager
+        services.AddSingleton<InsightLicenseManager>();
 
         // Register services
         services.AddSingleton<IFileService, FileService>();
