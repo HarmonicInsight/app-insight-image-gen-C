@@ -42,7 +42,7 @@
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
                                         <TextBlock Text="{Binding FileName}" FontWeight="SemiBold"/>
-                                        <TextBlock Text="{Binding Comment}" Foreground="Gray" FontSize="11"/>
+                                        <TextBlock Text="{Binding Comment}" Foreground="{StaticResource TextTertiaryBrush}" FontSize="11"/>
                                     </StackPanel>
                                     <Button Grid.Column="1" Content="X" Width="25" Height="25"
                                             Command="{Binding DataContext.DeleteJsonFileCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"

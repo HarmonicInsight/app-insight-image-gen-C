@@ -144,7 +144,8 @@
         <!-- Main Content                                                 -->
         <!-- ============================================================ -->
         <Border Grid.Row="2" Background="{StaticResource BgCardBrush}" Margin="20"
-                BorderBrush="{StaticResource BorderDefaultBrush}" BorderThickness="1" CornerRadius="12">
+                BorderBrush="{StaticResource BorderDefaultBrush}" BorderThickness="1" CornerRadius="12"
+                TextElement.Foreground="{StaticResource TextPrimaryBrush}">
             <Border.Effect>
                 <DropShadowEffect ShadowDepth="2" BlurRadius="8" Opacity="0.06" Color="Black"/>
             </Border.Effect>
