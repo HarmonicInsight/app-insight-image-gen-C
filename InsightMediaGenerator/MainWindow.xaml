@@ -107,13 +107,18 @@
                                    VerticalAlignment="Center" Margin="4,0,0,0"/>
                     </StackPanel>
 
-                    <!-- Plan Badge -->
-                    <Border Style="{StaticResource PlanBadgeStyle}" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <!-- Plan Badge (tier-specific colors per Insight-Common standard) -->
+                    <Border Margin="12,0,0,0" VerticalAlignment="Center"
+                            Background="{Binding CurrentPlan, Converter={StaticResource PlanToBgConverter}}"
+                            BorderBrush="{Binding CurrentPlan, Converter={StaticResource PlanToBorderConverter}}"
+                            BorderThickness="1" CornerRadius="100" Padding="10,3">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="5" Height="5" Fill="{StaticResource Accent500Brush}"
+                            <Ellipse Width="5" Height="5"
+                                     Fill="{Binding CurrentPlan, Converter={StaticResource PlanToColorConverter}}"
                                      VerticalAlignment="Center" Margin="0,0,5,0"/>
                             <TextBlock Text="{Binding CurrentPlan, FallbackValue=FREE}"
-                                       Style="{StaticResource PlanBadgeTextStyle}"/>
+                                       FontSize="10" FontWeight="Bold"
+                                       Foreground="{Binding CurrentPlan, Converter={StaticResource PlanToColorConverter}}"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
