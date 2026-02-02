@@ -92,7 +92,7 @@
                     <!-- App Logo -->
                     <Border Width="28" Height="28" CornerRadius="7" Background="{StaticResource AccentGradientBrush}">
                         <Border.Effect>
-                            <DropShadowEffect ShadowDepth="1" BlurRadius="3" Opacity="0.2" Color="#B8942F"/>
+                            <DropShadowEffect ShadowDepth="1" BlurRadius="3" Opacity="0.2" Color="{StaticResource Accent500Color}"/>
                         </Border.Effect>
                         <TextBlock Text="Hi" FontSize="11" FontWeight="Bold" Foreground="White"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>

@@ -134,7 +134,7 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button Content="Generate" Command="{Binding GenerateCommand}"
                         Width="120" Height="40" Margin="0,0,10,0"
-                        Background="#0056b3" Foreground="White" FontWeight="SemiBold"/>
+                        Style="{StaticResource PrimaryButtonStyle}"/>
                 <Button Content="Cancel" Command="{Binding CancelGenerationCommand}"
                         Width="100" Height="40"
                         IsEnabled="{Binding IsGenerating}"/>

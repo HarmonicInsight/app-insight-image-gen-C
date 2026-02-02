@@ -44,9 +44,9 @@
                                                           FontSize="12" Cursor="Hand">
                                                 <ToggleButton.Style>
                                                     <Style TargetType="ToggleButton">
-                                                        <Setter Property="Background" Value="#F3F0EB"/>
-                                                        <Setter Property="Foreground" Value="#57534E"/>
-                                                        <Setter Property="BorderBrush" Value="#E7E2DA"/>
+                                                        <Setter Property="Background" Value="{StaticResource BgSecondaryBrush}"/>
+                                                        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                                                        <Setter Property="BorderBrush" Value="{StaticResource BorderDefaultBrush}"/>
                                                         <Setter Property="BorderThickness" Value="1"/>
                                                         <Setter Property="Template">
                                                             <Setter.Value>
@@ -65,12 +65,12 @@
                                                         </Setter>
                                                         <Style.Triggers>
                                                             <Trigger Property="IsChecked" Value="True">
-                                                                <Setter Property="Background" Value="#B8942F"/>
-                                                                <Setter Property="Foreground" Value="White"/>
-                                                                <Setter Property="BorderBrush" Value="#8C711E"/>
+                                                                <Setter Property="Background" Value="{StaticResource Accent500Brush}"/>
+                                                                <Setter Property="Foreground" Value="{StaticResource TextOnAccentBrush}"/>
+                                                                <Setter Property="BorderBrush" Value="{StaticResource Accent700Brush}"/>
                                                             </Trigger>
                                                             <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter Property="BorderBrush" Value="#B8942F"/>
+                                                                <Setter Property="BorderBrush" Value="{StaticResource Accent500Brush}"/>
                                                             </Trigger>
                                                         </Style.Triggers>
                                                     </Style>
