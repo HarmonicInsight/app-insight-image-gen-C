@@ -212,26 +212,36 @@ public partial class MainViewModel : ObservableObject
 
     public void ShowLicenseDialog()
     {
-        var planInfo = CurrentPlan switch
+        var planName = CurrentPlan switch
         {
-            "FREE" => "フリープラン (機能制限あり)",
-            "TRIAL" => $"トライアルプラン (有効期限: {LicenseExpiresAt?.ToString("yyyy/MM/dd") ?? "不明"})",
-            "STD" => $"スタンダードプラン (有効期限: {LicenseExpiresAt?.ToString("yyyy/MM/dd") ?? "不明"})",
-            "PRO" => $"プロプラン (有効期限: {LicenseExpiresAt?.ToString("yyyy/MM/dd") ?? "不明"})",
-            "ENT" => "エンタープライズプラン",
+            "FREE" => "FREE (フリー)",
+            "TRIAL" => "TRIAL (トライアル)",
+            "STD" => "STD (スタンダード)",
+            "PRO" => "PRO (プロフェッショナル)",
+            "ENT" => "ENT (エンタープライズ)",
+            _ => CurrentPlan
+        };
+
+        var expiryInfo = CurrentPlan switch
+        {
+            "FREE" => "無期限 (機能制限あり)",
+            "ENT" when !LicenseExpiresAt.HasValue => "永久ライセンス",
+            _ when LicenseExpiresAt.HasValue => $"{LicenseExpiresAt.Value:yyyy/MM/dd}",
             _ => "不明"
         };
 
-        var maskedKey = string.IsNullOrEmpty(LicenseKey) ? "未設定" : InsightLicenseManager.MaskKey(LicenseKey);
+        var maskedKey = InsightLicenseManager.MaskKey(LicenseKey);
 
-        var message = $"InsightImageGen ライセンス情報\n\n" +
-                      $"現在のプラン: {planInfo}\n\n" +
+        var message = $"製品: InsightImageGen ({_licenseManager.ProductCodeDisplay})\n" +
+                      $"プラン: {planName}\n" +
+                      $"有効期限: {expiryInfo}\n" +
                       $"ライセンスキー: {maskedKey}\n\n" +
-                      "ライセンスの購入・更新については管理者にお問い合わせください。";
+                      "ライセンスの購入・更新については管理者にお問い合わせください。\n" +
+                      "キー形式: INIG-{PLAN}-{YYMM}-{HASH}-{SIG1}-{SIG2}";
 
         var result = MessageBox.Show(
             message,
-            "ライセンス管理",
+            "ライセンス管理 - InsightImageGen",
             MessageBoxButton.OKCancel,
             MessageBoxImage.Information
         );
@@ -245,15 +255,15 @@ public partial class MainViewModel : ObservableObject
     private void ShowLicenseActivationDialog()
     {
         var message = "ライセンスキーを入力してください:\n\n" +
-                      "形式: INIG-{プラン}-{YYMM}-{HASH}-{SIG1}-{SIG2}\n" +
-                      "例: INIG-PRO-2601-ABCD-EFGH-IJKL\n\n" +
-                      "ライセンスキーの入力は今後のアップデートで\n" +
-                      "専用ダイアログを実装予定です。\n\n" +
+                      "形式: INIG-{PLAN}-{YYMM}-{HASH}-{SIG1}-{SIG2}\n" +
+                      "例: INIG-PRO-2701-ABCD-EFGH-IJKL\n\n" +
+                      "PLAN: TRIAL / STD / PRO / ENT\n" +
+                      "YYMM: 有効期限 (年月, 例: 2701=2027年1月)\n\n" +
                       "現在は環境変数 INIG_LICENSE_KEY に設定してください。";
 
         MessageBox.Show(
             message,
-            "ライセンス認証",
+            "ライセンス認証 - InsightImageGen",
             MessageBoxButton.OK,
             MessageBoxImage.Information
         );
